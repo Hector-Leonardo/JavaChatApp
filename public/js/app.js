@@ -506,6 +506,7 @@ const ChatManager = {
         const chatArea = document.getElementById('chatArea');
         chatArea.innerHTML = `
             <div class="chat-header">
+                <button class="mobile-back-btn" onclick="toggleMobileSidebar(false)" title="Volver">&#8592;</button>
                 <div class="chat-header-avatar">${avatarContent}</div>
                 <div class="chat-header-info">
                     <h3>${username}</h3>
@@ -555,6 +556,7 @@ const ChatManager = {
         const chatArea = document.getElementById('chatArea');
         chatArea.innerHTML = `
             <div class="chat-header">
+                <button class="mobile-back-btn" onclick="toggleMobileSidebar(false)" title="Volver">&#8592;</button>
                 <div class="chat-header-avatar" style="background: linear-gradient(135deg, #667eea, #764ba2);">${group.name[0].toUpperCase()}</div>
                 <div class="chat-header-info">
                     <h3>${group.name}</h3>

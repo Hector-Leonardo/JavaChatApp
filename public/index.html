@@ -2,7 +2,10 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#075E54">
     <title>WhatsApp-Style Chat</title>
     <style>
         * {
@@ -1390,19 +1393,165 @@
             font-size: 0.95rem;
         }
 
-        /* Responsive */
+        /* ==================== RESPONSIVE DESIGN ==================== */
+
+        /* Desktop default: hide mobile-only elements */
+        .mobile-back-btn {
+            display: none !important;
+        }
+
+        /* --- Tablet landscape / small desktop (≤ 1024px) --- */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 40%;
+                max-width: none;
+            }
+
+            .message-bubble {
+                max-width: 70%;
+            }
+
+            .message-image,
+            .message-video {
+                max-width: 250px;
+            }
+        }
+
+        /* --- Tablet / large phone (≤ 768px) --- */
         @media (max-width: 768px) {
+            /* Layout: full-screen panels */
+            .app-container {
+                flex-direction: column;
+                height: 100vh;
+                height: 100dvh;
+            }
+
+            /* Sidebar takes full screen */
             .sidebar {
                 width: 100%;
                 max-width: none;
+                height: 100vh;
+                height: 100dvh;
             }
-            
-            .sidebar.chat-open {
+
+            .sidebar.hidden {
+                display: none !important;
+            }
+
+            /* Chat area hidden by default, fullscreen when active */
+            .chat-area {
                 display: none;
+                width: 100%;
+                height: 100vh;
+                height: 100dvh;
             }
-            
+
             .chat-area.chat-open {
                 display: flex;
+            }
+
+            /* Mobile back button (shown inside chat header) */
+            .mobile-back-btn {
+                display: inline-flex !important;
+                align-items: center;
+                justify-content: center;
+                width: 36px;
+                height: 36px;
+                min-width: 36px;
+                padding: 0;
+                background: rgba(255, 255, 255, 0.15);
+                color: white;
+                border-radius: 50%;
+                border: none;
+                cursor: pointer;
+                font-size: 1.2rem;
+                margin-right: 8px;
+                transition: background 0.2s;
+                flex-shrink: 0;
+            }
+
+            .mobile-back-btn:hover {
+                background: rgba(255, 255, 255, 0.3);
+            }
+
+            /* Chat header adjustments */
+            .chat-header {
+                padding: 10px 12px;
+                gap: 0;
+            }
+
+            .chat-header-avatar {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+                margin-right: 10px;
+            }
+
+            /* Messages */
+            .message-bubble {
+                max-width: 82%;
+            }
+
+            .message-image,
+            .message-video {
+                max-width: 100%;
+            }
+
+            .messages-container {
+                padding: 12px 8px;
+            }
+
+            /* Input area */
+            .input-area {
+                padding: 8px 10px;
+                gap: 4px;
+            }
+
+            #messageInput {
+                padding: 10px 12px;
+                font-size: 16px; /* prevents iOS zoom on focus */
+            }
+
+            #sendBtn {
+                width: 44px;
+                height: 44px;
+                min-width: 44px;
+                padding: 10px;
+            }
+
+            /* Emoji picker fullwidth */
+            .emoji-picker {
+                left: 10px;
+                right: 10px;
+                max-width: none;
+                bottom: 65px;
+            }
+
+            .emoji-grid {
+                grid-template-columns: repeat(7, 1fr);
+            }
+
+            /* Modals */
+            .modal-content {
+                width: 92%;
+                max-width: 400px;
+                padding: 20px;
+            }
+
+            /* Auth screen */
+            .auth-container {
+                width: 90%;
+                max-width: 400px;
+                padding: 30px 25px;
+            }
+
+            .auth-container h1 {
+                font-size: 1.6rem;
+            }
+
+            /* Video call */
+            .video-container {
+                flex-direction: column;
             }
 
             .video-wrapper {
@@ -1411,13 +1560,12 @@
             }
 
             .video-wrapper.remote {
-                height: 50%;
                 border-right: none;
                 border-bottom: 1px solid #333;
             }
 
             .video-controls {
-                bottom: 60px;
+                bottom: 50px;
                 padding: 12px 20px;
                 gap: 10px;
             }
@@ -1429,18 +1577,18 @@
             }
 
             .call-buttons {
-                right: 20px;
-                bottom: 100px;
+                right: 15px;
+                bottom: 90px;
             }
 
             .call-btn {
-                padding: 12px 25px;
+                padding: 12px 22px;
                 font-size: 0.9rem;
             }
 
             .call-info {
-                top: 20px;
-                left: 20px;
+                top: 15px;
+                left: 15px;
             }
 
             .call-info h3 {
@@ -1451,45 +1599,365 @@
                 font-size: 0.85rem;
                 padding: 8px 12px;
             }
+
+            /* Call notification */
+            .call-notification {
+                width: 90%;
+                max-width: 350px;
+                padding: 30px 20px;
+            }
+
+            /* Toast notifications */
+            .toast-notification {
+                left: 10px;
+                right: 10px;
+                max-width: none;
+                bottom: 10px;
+            }
+
+            /* No chat selected */
+            .no-chat-selected {
+                padding: 20px;
+                text-align: center;
+            }
+
+            .no-chat-selected h2 {
+                font-size: 1.2rem;
+            }
+
+            /* Sidebar header buttons touch-friendly */
+            .logout-btn {
+                padding: 8px 12px;
+                min-height: 36px;
+            }
+
+            .add-contact-btn,
+            .requests-btn {
+                width: 40px;
+                height: 40px;
+                min-width: 40px;
+            }
+
+            /* Search box */
+            .search-box input {
+                padding: 12px 15px;
+                font-size: 16px; /* prevents iOS zoom */
+            }
+
+            /* Contact items touch-friendly */
+            .contact-item {
+                padding: 14px 12px;
+                min-height: 68px;
+            }
+
+            /* Scrollbar hide on mobile */
+            ::-webkit-scrollbar {
+                width: 0;
+                height: 0;
+            }
         }
 
-        /* Additional mobile layout adjustments */
-        @media (max-width: 768px) {
-            .app-container {
+        /* --- Small phone (≤ 480px) --- */
+        @media (max-width: 480px) {
+            /* Auth screen tighter */
+            .auth-container {
+                width: 95%;
+                padding: 25px 18px;
+            }
+
+            .auth-container h1 {
+                font-size: 1.4rem;
+            }
+
+            .auth-container p {
+                font-size: 0.9rem;
+                margin-bottom: 20px;
+            }
+
+            .whatsapp-logo {
+                width: 60px;
+                height: 60px;
+                margin-bottom: 15px;
+            }
+
+            .auth-form input {
+                padding: 12px;
+                font-size: 16px;
+            }
+
+            .auth-form button {
+                padding: 13px;
+                font-size: 0.95rem;
+            }
+
+            /* Sidebar header compact */
+            .sidebar-header {
+                padding: 10px;
+                gap: 6px;
+            }
+
+            .sidebar-header h2 {
+                font-size: 1rem;
+            }
+
+            .sidebar-header-left {
+                gap: 8px;
+            }
+
+            .profile-avatar {
+                width: 38px;
+                height: 38px;
+                font-size: 1rem;
+            }
+
+            .logout-btn {
+                padding: 6px 10px;
+                font-size: 0.78rem;
+            }
+
+            /* Contact items */
+            .contact-item {
+                padding: 12px 10px;
+            }
+
+            .contact-avatar {
+                width: 44px;
+                height: 44px;
+                font-size: 1.2rem;
+                margin-right: 10px;
+            }
+
+            .contact-name {
+                font-size: 0.95rem;
+            }
+
+            .contact-status {
+                font-size: 0.8rem;
+            }
+
+            /* Messages wider on small screens */
+            .message-bubble {
+                max-width: 88%;
+                padding: 6px 10px;
+            }
+
+            .message-content {
+                font-size: 0.92rem;
+            }
+
+            .message-time {
+                font-size: 0.65rem;
+            }
+
+            /* Chat header compact */
+            .chat-header {
+                padding: 8px 10px;
+            }
+
+            .chat-header-avatar {
+                width: 34px;
+                height: 34px;
+                font-size: 0.95rem;
+                margin-right: 8px;
+            }
+
+            .chat-header-info h3 {
+                font-size: 0.95rem;
+            }
+
+            .chat-header-info p {
+                font-size: 0.7rem;
+            }
+
+            /* Input more compact */
+            .input-area {
+                padding: 6px 8px;
+                gap: 3px;
+            }
+
+            #messageInput {
+                padding: 9px 10px;
+                font-size: 16px;
+            }
+
+            #sendBtn {
+                width: 40px;
+                height: 40px;
+                min-width: 40px;
+            }
+
+            .input-btn {
+                padding: 6px;
+            }
+
+            .input-btn svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            /* Emoji picker */
+            .emoji-grid {
+                grid-template-columns: repeat(6, 1fr);
+                gap: 3px;
+            }
+
+            .emoji-item {
+                font-size: 1.3rem;
+                padding: 4px;
+            }
+
+            /* Modals */
+            .modal-content {
+                padding: 15px;
+                border-radius: 12px;
+                width: 95%;
+            }
+
+            .modal-header h3 {
+                font-size: 1rem;
+            }
+
+            /* Video call controls */
+            .video-controls {
+                bottom: 35px;
+                padding: 10px 15px;
+                gap: 8px;
+            }
+
+            .control-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+
+            .call-buttons {
+                bottom: 35px;
+                right: 10px;
+            }
+
+            .call-btn {
+                padding: 10px 18px;
+                font-size: 0.85rem;
+            }
+
+            .call-notification {
+                padding: 25px 15px;
+            }
+
+            .call-notification h3 {
+                font-size: 1.1rem;
+            }
+
+            .call-notification-buttons button {
+                padding: 10px 20px;
+                font-size: 0.85rem;
+            }
+
+            /* Request items */
+            .request-item {
+                padding: 10px;
+                gap: 8px;
+            }
+
+            .request-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+            }
+
+            .request-actions {
                 flex-direction: column;
-                height: 100vh;
+                gap: 4px;
             }
 
-            /* Hide chat area until a conversation is opened */
-            .chat-area {
-                display: none;
-                height: calc(100vh - 60px);
+            .accept-btn, .reject-btn {
+                padding: 6px 12px;
+                font-size: 0.8rem;
             }
 
-            .chat-area.chat-open {
-                display: flex;
+            /* Edit profile avatar */
+            .edit-profile-avatar {
+                width: 100px;
+                height: 100px;
+                font-size: 2.5rem;
             }
 
-            .sidebar.hidden {
-                display: none !important;
+            /* Sidebar header buttons */
+            .add-contact-btn,
+            .requests-btn {
+                width: 36px;
+                height: 36px;
+            }
+
+            .add-contact-btn svg,
+            .requests-btn svg {
+                width: 18px;
+                height: 18px;
             }
 
             .mobile-back-btn {
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                padding: 8px 12px;
-                margin: 10px;
-                background: #128C7E;
-                color: white;
-                border-radius: 8px;
-                border: none;
-                cursor: pointer;
-                font-weight: bold;
+                width: 32px;
+                height: 32px;
+                min-width: 32px;
+                font-size: 1rem;
+            }
+        }
+
+        /* --- Safe area for notched phones --- */
+        @supports (padding: env(safe-area-inset-bottom)) {
+            .input-area {
+                padding-bottom: calc(8px + env(safe-area-inset-bottom));
             }
 
-            .mobile-back-btn.hidden {
-                display: none !important;
+            .video-controls {
+                bottom: calc(30px + env(safe-area-inset-bottom));
+            }
+        }
+
+        /* --- Landscape phone --- */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .video-container {
+                flex-direction: row;
+            }
+
+            .video-wrapper {
+                width: 50%;
+                height: 100%;
+            }
+
+            .video-wrapper.remote {
+                border-right: 1px solid #333;
+                border-bottom: none;
+            }
+
+            .video-controls {
+                bottom: 10px;
+                padding: 8px 15px;
+            }
+
+            .control-btn {
+                width: 38px;
+                height: 38px;
+            }
+
+            .auth-container {
+                padding: 20px;
+            }
+
+            .whatsapp-logo {
+                width: 40px;
+                height: 40px;
+                margin-bottom: 10px;
+            }
+
+            .auth-container h1 {
+                font-size: 1.3rem;
+                margin-bottom: 5px;
+            }
+
+            .auth-container p {
+                margin-bottom: 10px;
+                font-size: 0.85rem;
             }
         }
     </style>
@@ -1577,8 +2045,6 @@
 
             <!-- Chat Area -->
             <div class="chat-area" id="chatArea">
-                <!-- Botón móvil para volver a la lista de contactos -->
-                <button id="mobileBackBtn" class="mobile-back-btn hidden" onclick="toggleMobileSidebar(false)">← Volver</button>
                 <div class="no-chat-selected">
                     <h2>Bienvenido al Chat</h2>
                     <p>Selecciona un contacto para comenzar a chatear</p>
@@ -1667,41 +2133,36 @@
         </div>
     </div>
 
-    <!-- Mobile toggle script (keeps small mobile behavior separate) -->
+    <!-- Mobile navigation script -->
     <script>
-        function toggleMobileSidebar(showChat){
+        function toggleMobileSidebar(showChat) {
+            if (window.innerWidth > 768) return;
             const sidebar = document.querySelector('.sidebar');
             const chatArea = document.getElementById('chatArea');
-            const backBtn = document.getElementById('mobileBackBtn');
-            if(!sidebar || !chatArea || !backBtn) return;
-            if(showChat){
+            if (!sidebar || !chatArea) return;
+            if (showChat) {
                 sidebar.classList.add('hidden');
                 chatArea.classList.add('chat-open');
-                backBtn.classList.remove('hidden');
             } else {
                 sidebar.classList.remove('hidden');
                 chatArea.classList.remove('chat-open');
-                backBtn.classList.add('hidden');
             }
         }
 
-        // When a contact is clicked on mobile, switch to chat view.
-        document.addEventListener('click', function(e){
-            if(window.innerWidth <= 768 && e.target.closest('.contact-item')){
+        // When a contact is clicked on mobile, switch to chat view
+        document.addEventListener('click', function(e) {
+            if (window.innerWidth <= 768 && e.target.closest('.contact-item')) {
                 toggleMobileSidebar(true);
             }
         });
 
-        // Ensure UI resets on resize to larger screens
-        window.addEventListener('resize', function(){
-            const sidebar = document.querySelector('.sidebar');
-            const chatArea = document.getElementById('chatArea');
-            const backBtn = document.getElementById('mobileBackBtn');
-            if(!sidebar || !chatArea || !backBtn) return;
-            if(window.innerWidth > 768){
-                sidebar.classList.remove('hidden');
-                chatArea.classList.remove('chat-open');
-                backBtn.classList.add('hidden');
+        // Reset layout when resizing above mobile breakpoint
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                const sidebar = document.querySelector('.sidebar');
+                const chatArea = document.getElementById('chatArea');
+                if (sidebar) sidebar.classList.remove('hidden');
+                if (chatArea) chatArea.classList.remove('chat-open');
             }
         });
     </script>
