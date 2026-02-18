@@ -53,27 +53,6 @@ public class Group {
         return timestamp;
     }
 
-    // Setters
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setMembers(List<String> members) {
-        this.members = new ArrayList<>(members);
-    }
-
-    public void setCreator(String creator) {
-        this.creator = creator;
-    }
-
-    public void setTimestamp(String timestamp) {
-        this.timestamp = timestamp;
-    }
-
     /**
      * Agregar un miembro al grupo
      */
@@ -84,27 +63,9 @@ public class Group {
     }
 
     /**
-     * Remover un miembro del grupo
-     */
-    public void removeMember(String username) {
-        members.remove(username);
-    }
-
-    /**
      * Verificar si un usuario es miembro
      */
     public boolean isMember(String username) {
         return members.contains(username);
-    }
-
-    @Override
-    public String toString() {
-        return "Group{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                ", creator='" + creator + '\'' +
-                ", members=" + members.size() +
-                ", timestamp='" + timestamp + '\'' +
-                '}';
     }
 }

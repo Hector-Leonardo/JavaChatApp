@@ -68,14 +68,10 @@ JavaChatApp/
 │   │   └── ChatWebServer.java           # Punto de entrada — Inicia Jetty (HTTP + WebSocket en un solo puerto)
 │   ├── firebase/
 │   │   └── FirebaseService.java         # Integración con Firebase Firestore (CRUD usuarios, mensajes, grupos, contactos)
-│   ├── handlers/
-│   │   └── StaticFileHandler.java       # Handler HTTP legacy (no utilizado — Jetty DefaultServlet sirve los archivos)
 │   ├── models/                          # Modelos de datos Java
 │   │   ├── User.java                    # username, password, online, profilePicture, lastSeen, status, about
-│   │   ├── Message.java                 # from, to, content, contentType (text/emoji/image/video), timestamp, groupId, read
-│   │   ├── Group.java                   # id, name, members[], creator, timestamp
-│   │   ├── Contact.java                 # ownerUsername, contactUsername, addedAt
-│   │   └── FriendRequest.java           # id, fromUsername, toUsername, status (pending/accepted/rejected), createdAt
+│   │   ├── Message.java                 # from, to, content, contentType (text/emoji/image/video), timestamp, groupId
+│   │   └── Group.java                   # id, name, members[], creator, timestamp
 │   └── websocket/
 │       └── WebSocketHandler.java        # Lógica WebSocket — maneja 29+ tipos de mensajes (chat, llamadas, perfil, contactos)
 ├── public/                              # Frontend — Archivos web servidos por Jetty
@@ -327,12 +323,9 @@ El frontend está organizado en módulos lógicos: `AuthManager`, `WebSocketMana
 | `src/main/java/com/chatapp/server/ChatWebServer.java` | Clase principal — configura e inicia el servidor Jetty con HTTP y WebSocket |
 | `src/main/java/com/chatapp/firebase/FirebaseService.java` | Servicio de Firebase — inicialización, operaciones CRUD sobre Firestore |
 | `src/main/java/com/chatapp/websocket/WebSocketHandler.java` | Lógica WebSocket — procesa 29+ tipos de mensajes (chat, llamadas WebRTC, perfil, contactos, grupos) |
-| `src/main/java/com/chatapp/handlers/StaticFileHandler.java` | Handler HTTP legacy (no utilizado en la versión actual) |
 | `src/main/java/com/chatapp/models/User.java` | Modelo de datos: Usuario |
 | `src/main/java/com/chatapp/models/Message.java` | Modelo de datos: Mensaje (soporta text, emoji, image, video) |
 | `src/main/java/com/chatapp/models/Group.java` | Modelo de datos: Grupo de chat |
-| `src/main/java/com/chatapp/models/Contact.java` | Modelo de datos: Contacto |
-| `src/main/java/com/chatapp/models/FriendRequest.java` | Modelo de datos: Solicitud de amistad |
 
 ### Cliente (Frontend)
 

@@ -221,21 +221,4 @@ public class ChatWebServer {
             e.printStackTrace();
         }
     }
-
-    // Métodos getter para acceso a datos en caso de necesidad
-    public static Map<String, User> getUsers() {
-        return users;
-    }
-
-    public static Map<String, WebSocketHandler> getOnlineUsers() {
-        return onlineUsers;
-    }
-
-    public static Map<String, List<Message>> getConversations() {
-        return conversations;
-    }
-
-    public static Map<String, Group> getGroups() {
-        return groups;
-    }
 }

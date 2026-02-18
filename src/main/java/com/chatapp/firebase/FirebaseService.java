@@ -115,17 +115,6 @@ public class FirebaseService {
     }
 
     /**
-     * Obtiene un usuario específico
-     */
-    public static Map<String, Object> getUser(String username) throws ExecutionException, InterruptedException {
-        if (db == null)
-            return null;
-
-        DocumentSnapshot doc = db.collection(USERS_COLLECTION).document(username).get().get();
-        return doc.exists() ? doc.getData() : null;
-    }
-
-    /**
      * Obtiene todos los usuarios
      */
     public static Map<String, Map<String, Object>> getAllUsers() throws ExecutionException, InterruptedException {
@@ -140,25 +129,6 @@ public class FirebaseService {
         }
 
         return users;
-    }
-
-    /**
-     * Actualiza el estado en línea de un usuario
-     */
-    public static void updateUserStatus(String username, boolean online)
-            throws ExecutionException, InterruptedException {
-        if (db == null)
-            return;
-
-        if (online) {
-            db.collection(USERS_COLLECTION).document(username).update("online", online).get();
-        } else {
-            // Cuando se desconecta, guardar timestamp de última conexión
-            java.util.Map<String, Object> updates = new java.util.HashMap<>();
-            updates.put("online", false);
-            updates.put("lastSeen", System.currentTimeMillis());
-            db.collection(USERS_COLLECTION).document(username).update(updates).get();
-        }
     }
 
     /**
@@ -229,27 +199,6 @@ public class FirebaseService {
                 .collection("messages").add(messageData).get();
 
         System.out.println("[FIREBASE] ✓ Mensaje guardado en conversación: " + conversationId);
-    }
-
-    /**
-     * Obtiene todos los mensajes de una conversación
-     */
-    public static List<Map<String, Object>> getConversationMessages(String conversationId)
-            throws ExecutionException, InterruptedException {
-        if (db == null)
-            return new ArrayList<>();
-
-        List<Map<String, Object>> messages = new ArrayList<>();
-        QuerySnapshot querySnapshot = db.collection(CONVERSATIONS_COLLECTION)
-                .document(conversationId).collection("messages")
-                .orderBy("timestamp")
-                .get().get();
-
-        for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
-            messages.add(doc.getData());
-        }
-
-        return messages;
     }
 
     /**
@@ -438,17 +387,6 @@ public class FirebaseService {
 
         db.collection(GROUPS_COLLECTION).document(groupId).set(groupData).get();
         System.out.println("[FIREBASE] ✓ Grupo guardado: " + name);
-    }
-
-    /**
-     * Obtiene un grupo específico
-     */
-    public static Map<String, Object> getGroup(String groupId) throws ExecutionException, InterruptedException {
-        if (db == null)
-            return null;
-
-        DocumentSnapshot doc = db.collection(GROUPS_COLLECTION).document(groupId).get().get();
-        return doc.exists() ? doc.getData() : null;
     }
 
     /**
@@ -729,17 +667,6 @@ public class FirebaseService {
         db.collection(FRIEND_REQUESTS_COLLECTION).document(requestId)
                 .update("status", "rejected").get();
         System.out.println("[FIREBASE] ✓ Solicitud rechazada: " + requestId);
-    }
-
-    /**
-     * Elimina una solicitud de amistad
-     */
-    public static void deleteFriendRequest(String requestId)
-            throws ExecutionException, InterruptedException {
-        if (db == null)
-            return;
-
-        db.collection(FRIEND_REQUESTS_COLLECTION).document(requestId).delete().get();
     }
 
     /**

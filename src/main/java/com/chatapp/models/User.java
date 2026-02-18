@@ -58,14 +58,6 @@ public class User {
     }
 
     // Setters
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public void setOnline(boolean online) {
         this.online = online;
     }
@@ -84,17 +76,5 @@ public class User {
 
     public void setAbout(String about) {
         this.about = about;
-    }
-
-    @Override
-    public String toString() {
-        return "User{" +
-                "username='" + username + '\'' +
-                ", online=" + online +
-                ", profilePicture='" + profilePicture + '\'' +
-                ", lastSeen=" + lastSeen +
-                ", status='" + status + '\'' +
-                ", about='" + about + '\'' +
-                '}';
     }
 }

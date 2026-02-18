@@ -68,48 +68,8 @@ public class Message {
         return groupId;
     }
 
-    public boolean isRead() {
-        return read;
-    }
-
     // Setters
-    public void setFrom(String from) {
-        this.from = from;
-    }
-
-    public void setTo(String to) {
-        this.to = to;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
-
     public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
-    }
-
-    public void setGroupId(String groupId) {
-        this.groupId = groupId;
-    }
-
-    public void setRead(boolean read) {
-        this.read = read;
-    }
-
-    @Override
-    public String toString() {
-        return "Message{" +
-                "from='" + from + '\'' +
-                ", to='" + to + '\'' +
-                ", groupId='" + groupId + '\'' +
-                ", timestamp='" + timestamp + '\'' +
-                ", contentType='" + contentType + '\'' +
-                ", read=" + read +
-                '}';
     }
 }
