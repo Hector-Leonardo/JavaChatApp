@@ -1774,9 +1774,20 @@ const VideoCallManager = {
 
         // Recibir tracks remotos
         AppState.peerConnection.ontrack = (event) => {
+            console.log('[WebRTC] ontrack fired, streams:', event.streams.length);
             const remoteVideo = document.getElementById('remoteVideo');
-            if (remoteVideo) {
+            if (remoteVideo && event.streams[0]) {
                 remoteVideo.srcObject = event.streams[0];
+                // Forzar play explícito (necesario en móviles)
+                remoteVideo.play().then(() => {
+                    console.log('[WebRTC] Remote video playing');
+                    this.onRemoteVideoConnected();
+                }).catch(err => {
+                    console.warn('[WebRTC] Remote video play() error:', err);
+                    // Intentar sin audio si autoplay falla
+                    remoteVideo.muted = true;
+                    remoteVideo.play().then(() => this.onRemoteVideoConnected()).catch(e => console.error(e));
+                });
             }
         };
 
@@ -1795,13 +1806,23 @@ const VideoCallManager = {
         AppState.peerConnection.onconnectionstatechange = () => {
             const state = AppState.peerConnection?.connectionState;
             console.log('[WebRTC] Connection state:', state);
-            if (state === 'failed' || state === 'disconnected') {
+            if (state === 'connected') {
+                this.onRemoteVideoConnected();
+            } else if (state === 'failed') {
+                console.error('[WebRTC] Conexión fallida');
+                document.getElementById('callStatusText').textContent = 'Conexión fallida';
+                document.getElementById('callDuration').textContent = 'Error';
+            } else if (state === 'disconnected') {
                 console.warn('[WebRTC] Conexión perdida');
             }
         };
 
         AppState.peerConnection.oniceconnectionstatechange = () => {
-            console.log('[WebRTC] ICE state:', AppState.peerConnection?.iceConnectionState);
+            const iceState = AppState.peerConnection?.iceConnectionState;
+            console.log('[WebRTC] ICE state:', iceState);
+            if (iceState === 'connected' || iceState === 'completed') {
+                this.onRemoteVideoConnected();
+            }
         };
     },
 
@@ -1905,6 +1926,16 @@ const VideoCallManager = {
         if (overlay) overlay.classList.remove('connected');
     },
 
+    // Llamado cuando el video remoto se conecta (desde múltiples triggers)
+    onRemoteVideoConnected() {
+        const overlay = document.getElementById('callConnectingOverlay');
+        if (overlay && !overlay.classList.contains('connected')) {
+            console.log('[WebRTC] Ocultando overlay de conexión');
+            overlay.classList.add('connected');
+            this.startCallTimer();
+        }
+    },
+
     // ========== UI ==========
     showVideoModal(peerName, statusText) {
         const initial = peerName ? peerName.charAt(0).toUpperCase() : '?';
@@ -1925,12 +1956,12 @@ const VideoCallManager = {
         // Mostrar modal
         document.getElementById('videoCallModal').classList.add('show');
 
-        // Escuchar cuando se conecte el video remoto
+        // Múltiples listeners por si ontrack no es suficiente
         const remoteVideo = document.getElementById('remoteVideo');
-        remoteVideo.onplaying = () => {
-            // Ocultar overlay y empezar cronómetro
-            if (overlay) overlay.classList.add('connected');
-            this.startCallTimer();
+        remoteVideo.onplaying = () => this.onRemoteVideoConnected();
+        remoteVideo.onloadedmetadata = () => {
+            console.log('[WebRTC] Remote video metadata loaded');
+            remoteVideo.play().catch(() => {});
         };
     },
 
