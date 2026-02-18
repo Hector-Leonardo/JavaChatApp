@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#075E54">
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="favicon.png">
-    <title>WhatsApp-Style Chat</title>
+    <title>ChihuChat</title>
     <style>
         * {
             margin: 0;
@@ -1002,16 +1002,17 @@
             fill: currentColor;
         }
 
-        /* WhatsApp Logo */
-        .whatsapp-logo {
+        /* App Logo */
+        .app-logo {
             width: 80px;
             height: 80px;
             margin: 0 auto 20px;
         }
 
-        .whatsapp-logo svg {
+        .app-logo img {
             width: 100%;
             height: 100%;
+            object-fit: contain;
         }
 
         #messageInput {
@@ -1660,7 +1661,7 @@
                 margin-bottom: 20px;
             }
 
-            .whatsapp-logo {
+            .app-logo {
                 width: 60px;
                 height: 60px;
                 margin-bottom: 15px;
@@ -1923,7 +1924,7 @@
                 padding: 20px;
             }
 
-            .whatsapp-logo {
+            .app-logo {
                 width: 40px;
                 height: 40px;
                 margin-bottom: 10px;
@@ -1945,13 +1946,10 @@
     <!-- Auth Screen -->
     <div id="authScreen">
         <div class="auth-container">
-            <div class="whatsapp-logo">
-                <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                    <path fill="#128C7E" d="M24 4C12.95 4 4 12.95 4 24c0 3.55.93 6.88 2.54 9.78L4 44l10.52-2.47A19.87 19.87 0 0024 44c11.05 0 20-8.95 20-20S35.05 4 24 4zm0 36c-3.18 0-6.17-.77-8.82-2.12l-.63-.33-6.24 1.47 1.54-5.98-.4-.62A15.86 15.86 0 018 24c0-8.84 7.16-16 16-16s16 7.16 16 16-7.16 16-16 16z"/>
-                    <path fill="#128C7E" d="M34.5 28.58c-.57-.29-3.37-1.66-3.89-1.85-.52-.19-.9-.29-1.28.29-.38.57-1.47 1.85-1.8 2.23-.33.38-.67.43-1.24.14-.57-.29-2.4-.88-4.58-2.82-1.69-1.51-2.84-3.37-3.17-3.94-.33-.57-.04-.88.25-1.17.26-.26.57-.67.86-1 .29-.34.38-.57.57-.95.19-.38.1-.71-.05-1-.14-.29-1.28-3.08-1.76-4.22-.46-1.11-.93-1.03-1.28-1.03-.33 0-.71-.05-1.09-.05s-1 .14-1.52.71c-.52.57-2 1.95-2 4.76s2.05 5.52 2.33 5.9c.29.38 4.03 6.15 9.76 8.63 1.36.59 2.43.94 3.26 1.2 1.37.44 2.62.38 3.6.23 1.1-.16 3.37-1.38 3.85-2.71.48-1.33.48-2.47.33-2.71-.14-.24-.52-.38-1.09-.67z"/>
-                </svg>
+            <div class="app-logo">
+                <img src="favicon.png" alt="ChihuChat">
             </div>
-            <h1>Chat App</h1>
+            <h1>ChihuChat</h1>
             <p>Conecta con tus amigos</p>
             
             <div class="auth-tabs">
