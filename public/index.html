@@ -1152,15 +1152,11 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: #000;
+            background: #111;
             z-index: 3000;
             justify-content: center;
             align-items: center;
             flex-direction: column;
-        }
-
-        .video-modal[hidden] {
-            display: none !important;
         }
 
         .video-modal.show {
@@ -1175,21 +1171,37 @@
             gap: 0;
             justify-content: center;
             align-items: center;
+            background: #111;
         }
 
-        .video-wrapper {
-            position: relative;
-            width: 50%;
+        /* Remote video ocupa toda la pantalla */
+        .video-wrapper.remote {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
             height: 100%;
-            background: #1a1a1a;
+            background: #1a1a2e;
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
+            z-index: 1;
         }
 
-        .video-wrapper.remote {
-            border-right: 1px solid #333;
+        /* Local video pequeño superpuesto (PiP) */
+        .video-wrapper.local {
+            position: absolute;
+            bottom: 110px;
+            right: 20px;
+            width: 140px;
+            height: 200px;
+            background: #1a1a2e;
+            border-radius: 16px;
+            overflow: hidden;
+            z-index: 10;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            border: 2px solid rgba(255,255,255,0.15);
         }
 
         .video-stream {
@@ -1211,23 +1223,23 @@
 
         .video-label {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
+            bottom: 10px;
+            left: 10px;
             color: white;
-            font-size: 1rem;
+            font-size: 0.8rem;
             font-weight: bold;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px 15px;
-            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 5px 10px;
+            border-radius: 12px;
             z-index: 15;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .video-indicator {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             background: #25D366;
             animation: pulse 1.5s infinite;
@@ -1238,6 +1250,67 @@
             50% { opacity: 0.5; }
         }
 
+        /* Overlay de estado de conexión */
+        .call-connecting-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 5;
+            transition: opacity 0.5s ease;
+        }
+
+        .call-connecting-overlay.connected {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .call-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            color: white;
+            font-weight: bold;
+            margin-bottom: 20px;
+            box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.4);
+            animation: avatarPulse 2s infinite;
+        }
+
+        @keyframes avatarPulse {
+            0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.4); }
+            70% { box-shadow: 0 0 0 25px rgba(37, 211, 102, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+        }
+
+        .call-connecting-overlay .call-peer-name {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .call-connecting-overlay .call-status-text {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.95rem;
+            animation: statusBlink 1.5s infinite;
+        }
+
+        @keyframes statusBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
         .video-controls {
             position: absolute;
             bottom: 30px;
@@ -1246,21 +1319,22 @@
             display: flex;
             gap: 15px;
             z-index: 25;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 15px 25px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 12px 20px;
             border-radius: 50px;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
         }
 
         .control-btn {
-            width: 50px;
-            height: 50px;
+            width: 55px;
+            height: 55px;
             border: none;
             border-radius: 50%;
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             cursor: pointer;
             transition: all 0.3s;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.15);
             color: white;
             display: flex;
             justify-content: center;
@@ -1269,132 +1343,160 @@
         }
 
         .control-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.25);
             transform: scale(1.1);
         }
 
         .control-btn.active {
-            background: #25D366;
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .control-btn.muted {
             background: #ff4444;
         }
 
-        .call-buttons {
-            position: absolute;
-            bottom: 30px;
-            right: 30px;
-            display: flex;
-            gap: 15px;
-            z-index: 25;
-        }
-
-        .call-btn {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 50px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
-            color: white;
-        }
-
-        .call-btn-accept {
-            background: #25D366;
-        }
-
-        .call-btn-accept:hover {
-            background: #1fa855;
-        }
-
-        .call-btn-reject {
-            background: #dc3545;
-        }
-
-        .call-btn-reject:hover {
-            background: #c82333;
-        }
-
-        .call-btn-end {
+        .control-btn.end-call {
             background: #ff4444;
-            padding: 15px 40px;
+            width: 60px;
+            height: 60px;
         }
 
-        .call-btn-end:hover {
+        .control-btn.end-call:hover {
             background: #dd0000;
+            transform: scale(1.1);
         }
 
         .call-info {
             position: absolute;
-            top: 30px;
-            left: 30px;
+            top: 0;
+            left: 0;
+            right: 0;
             color: white;
             z-index: 20;
+            padding: 20px 25px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .call-info-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            color: white;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .call-info-details {
+            flex: 1;
         }
 
         .call-info h3 {
-            font-size: 1.3rem;
-            margin-bottom: 5px;
-            font-weight: bold;
+            font-size: 1.1rem;
+            margin: 0 0 2px 0;
+            font-weight: 600;
         }
 
         .call-duration {
-            font-size: 0.9rem;
-            color: #ccc;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.7);
         }
 
         .call-notification {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             z-index: 3001;
-            text-align: center;
             display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
         }
 
         .call-notification.show {
-            display: block;
-            animation: slideDown 0.3s ease-out;
+            display: flex;
+            animation: fadeIn 0.3s ease-out;
         }
 
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translate(-50%, -60%);
-            }
-            to {
-                opacity: 1;
-                transform: translate(-50%, -50%);
-            }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .call-notification .call-avatar {
+            width: 130px;
+            height: 130px;
+            font-size: 3.5rem;
+            margin-bottom: 25px;
         }
 
         .call-notification h3 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 1.3rem;
+            color: white;
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        .call-notification .call-incoming-label {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.95rem;
+            margin-bottom: 40px;
         }
 
         .call-notification-buttons {
             display: flex;
-            gap: 15px;
+            gap: 40px;
             justify-content: center;
         }
 
-        .call-notification-buttons button {
-            padding: 12px 30px;
-            border: none;
-            border-radius: 25px;
-            font-weight: bold;
+        .call-notification-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
             cursor: pointer;
-            font-size: 0.95rem;
+            background: none;
+            border: none;
+        }
+
+        .call-notification-btn .btn-circle {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8rem;
+            transition: transform 0.2s;
+        }
+
+        .call-notification-btn .btn-circle:hover {
+            transform: scale(1.1);
+        }
+
+        .call-notification-btn.accept .btn-circle {
+            background: #25D366;
+            box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.4);
+            animation: avatarPulse 2s infinite;
+        }
+
+        .call-notification-btn.reject .btn-circle {
+            background: #ff4444;
+        }
+
+        .call-notification-btn span:last-child {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.8rem;
         }
 
         /* ==================== RESPONSIVE DESIGN ==================== */
@@ -1536,62 +1638,54 @@
                 font-size: 1.6rem;
             }
 
-            /* Video call */
-            .video-container {
-                flex-direction: column;
-            }
-
-            .video-wrapper {
-                width: 100%;
-                height: 50%;
-            }
-
-            .video-wrapper.remote {
-                border-right: none;
-                border-bottom: 1px solid #333;
+            /* Video call responsive */
+            .video-wrapper.local {
+                width: 110px;
+                height: 160px;
+                bottom: 100px;
+                right: 12px;
             }
 
             .video-controls {
-                bottom: 50px;
-                padding: 12px 20px;
+                bottom: 25px;
+                padding: 10px 16px;
                 gap: 10px;
             }
 
             .control-btn {
-                width: 45px;
-                height: 45px;
-                font-size: 1.1rem;
+                width: 48px;
+                height: 48px;
+                font-size: 1.2rem;
             }
 
-            .call-buttons {
-                right: 15px;
-                bottom: 90px;
-            }
-
-            .call-btn {
-                padding: 12px 22px;
-                font-size: 0.9rem;
+            .control-btn.end-call {
+                width: 52px;
+                height: 52px;
             }
 
             .call-info {
-                top: 15px;
-                left: 15px;
+                padding: 15px 15px;
             }
 
             .call-info h3 {
-                font-size: 1.1rem;
+                font-size: 1rem;
             }
 
-            .video-label {
-                font-size: 0.85rem;
-                padding: 8px 12px;
+            .call-avatar {
+                width: 100px;
+                height: 100px;
+                font-size: 2.5rem;
             }
 
-            /* Call notification */
-            .call-notification {
-                width: 90%;
-                max-width: 350px;
-                padding: 30px 20px;
+            .call-connecting-overlay .call-peer-name {
+                font-size: 1.3rem;
+            }
+
+            /* Call notification responsive */
+            .call-notification .call-avatar {
+                width: 110px;
+                height: 110px;
+                font-size: 3rem;
             }
 
             /* Toast notifications */
@@ -1896,18 +1990,11 @@
 
         /* --- Landscape phone --- */
         @media (max-height: 500px) and (orientation: landscape) {
-            .video-container {
-                flex-direction: row;
-            }
-
-            .video-wrapper {
-                width: 50%;
-                height: 100%;
-            }
-
-            .video-wrapper.remote {
-                border-right: 1px solid #333;
-                border-bottom: none;
+            .video-wrapper.local {
+                width: 120px;
+                height: 100px;
+                bottom: 70px;
+                right: 10px;
             }
 
             .video-controls {
@@ -1916,8 +2003,14 @@
             }
 
             .control-btn {
-                width: 38px;
-                height: 38px;
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+
+            .control-btn.end-call {
+                width: 44px;
+                height: 44px;
             }
 
             .auth-container {
@@ -2058,55 +2151,60 @@
     </div>
 
     <!-- Video Call Modal -->
-    <div class="video-modal" id="videoCallModal" hidden>
+    <div class="video-modal" id="videoCallModal">
         <div class="video-container" id="videoContainer">
-            <!-- Remote Video (otro usuario) -->
+            <!-- Remote Video (pantalla completa) -->
             <div class="video-wrapper remote">
                 <div class="video-stream">
                     <video id="remoteVideo" autoplay playsinline></video>
-                    <div class="video-label">
-                        <span class="video-indicator"></span>
-                        <span id="remoteLabel">Contacto</span>
-                    </div>
+                </div>
+                <!-- Overlay de estado: Conectando / Llamando -->
+                <div class="call-connecting-overlay" id="callConnectingOverlay">
+                    <div class="call-avatar" id="callAvatar">?</div>
+                    <div class="call-peer-name" id="callPeerName">Contacto</div>
+                    <div class="call-status-text" id="callStatusText">Conectando...</div>
                 </div>
             </div>
 
-            <!-- Local Video (tú) -->
-            <div class="video-wrapper">
+            <!-- Local Video (PiP pequeño) -->
+            <div class="video-wrapper local">
                 <div class="video-stream">
                     <video id="localVideo" autoplay muted playsinline></video>
-                    <div class="video-label">
-                        <span class="video-indicator"></span>
-                        <span id="localLabel">Tú</span>
-                    </div>
                 </div>
             </div>
 
-            <!-- Call Info -->
+            <!-- Call Info (barra superior) -->
             <div class="call-info">
-                <h3 id="callHeader">Videollamada</h3>
-                <div class="call-duration" id="callDuration">00:00</div>
+                <div class="call-info-avatar" id="callInfoAvatar">?</div>
+                <div class="call-info-details">
+                    <h3 id="callHeader">Videollamada</h3>
+                    <div class="call-duration" id="callDuration">Conectando...</div>
+                </div>
             </div>
 
-            <!-- Controls -->
+            <!-- Controls (barra inferior) -->
             <div class="video-controls">
-                <button class="control-btn active" onclick="toggleAudio()" id="audioBtn" title="Mutar micrófono">🎤</button>
-                <button class="control-btn active" onclick="toggleVideo()" id="videoBtn" title="Pausar video">📹</button>
-            </div>
-
-            <!-- End Call -->
-            <div class="call-buttons">
-                <button class="call-btn call-btn-end" onclick="endCall()">🔴 Terminar</button>
+                <button class="control-btn active" onclick="toggleAudio()" id="audioBtn" title="Mutar micrófono">🎙️</button>
+                <button class="control-btn active" onclick="toggleVideo()" id="videoBtn" title="Pausar video">📷</button>
+                <button class="control-btn end-call" onclick="endCall()" title="Terminar llamada">📵</button>
             </div>
         </div>
     </div>
 
-    <!-- Call Notification Modal -->
+    <!-- Incoming Call Notification (pantalla completa) -->
     <div class="call-notification" id="callNotification">
-        <h3 id="callNotificationText">Llamada entrante...</h3>
+        <div class="call-avatar" id="incomingCallAvatar">?</div>
+        <h3 id="callNotificationText">Llamada entrante</h3>
+        <div class="call-incoming-label">Videollamada entrante...</div>
         <div class="call-notification-buttons">
-            <button class="call-btn call-btn-accept" onclick="acceptCall()">✅ Aceptar</button>
-            <button class="call-btn call-btn-reject" onclick="rejectCall()">❌ Rechazar</button>
+            <button class="call-notification-btn reject" onclick="rejectCall()">
+                <div class="btn-circle">📵</div>
+                <span>Rechazar</span>
+            </button>
+            <button class="call-notification-btn accept" onclick="acceptCall()">
+                <div class="btn-circle">📹</div>
+                <span>Aceptar</span>
+            </button>
         </div>
     </div>
 

@@ -1670,8 +1670,7 @@ const VideoCallManager = {
             });
 
             // Mostrar modal del lado del que llama
-            this.showVideoModal();
-            document.getElementById('callHeader').textContent = `Llamando a ${AppState.activeChat}...`;
+            this.showVideoModal(AppState.activeChat, 'Llamando...');
         } catch (error) {
             console.error('Error al iniciar llamada:', error);
             alert('No se pudo acceder a la cámara/micrófono.');
@@ -1683,7 +1682,9 @@ const VideoCallManager = {
     handleCallRequest(data) {
         AppState.incomingCallData = data;
         this.callPeer = data.from;
-        document.getElementById('callNotificationText').textContent = `Llamada de ${data.from}`;
+        const initial = data.from ? data.from.charAt(0).toUpperCase() : '?';
+        document.getElementById('incomingCallAvatar').textContent = initial;
+        document.getElementById('callNotificationText').textContent = data.from;
         document.getElementById('callNotification').classList.add('show');
     },
 
@@ -1718,8 +1719,7 @@ const VideoCallManager = {
                 answer: answer
             });
 
-            this.showVideoModal();
-            document.getElementById('callHeader').textContent = `Videollamada con ${data.from}`;
+            this.showVideoModal(data.from, 'Conectando...');
         } catch (error) {
             console.error('Error al aceptar llamada:', error);
             alert('No se pudo acceder a la cámara/micrófono.');
@@ -1736,7 +1736,8 @@ const VideoCallManager = {
             // Aplicar ICE candidates pendientes
             this.flushPendingCandidates();
 
-            document.getElementById('callHeader').textContent = `Videollamada con ${this.callPeer}`;
+            document.getElementById('callStatusText').textContent = 'Conectado';
+            document.getElementById('callDuration').textContent = 'Conectado';
         } catch (error) {
             console.error('Error al recibir answer:', error);
         }
@@ -1894,15 +1895,47 @@ const VideoCallManager = {
         AppState.videoEnabled = true;
 
         const videoModal = document.getElementById('videoCallModal');
-        if (videoModal) videoModal.hidden = true;
+        if (videoModal) videoModal.classList.remove('show');
 
         const notification = document.getElementById('callNotification');
         if (notification) notification.classList.remove('show');
+
+        // Reset overlay
+        const overlay = document.getElementById('callConnectingOverlay');
+        if (overlay) overlay.classList.remove('connected');
     },
 
     // ========== UI ==========
-    showVideoModal() {
-        document.getElementById('videoCallModal').hidden = false;
+    showVideoModal(peerName, statusText) {
+        const initial = peerName ? peerName.charAt(0).toUpperCase() : '?';
+
+        // Overlay de conexión
+        const overlay = document.getElementById('callConnectingOverlay');
+        if (overlay) overlay.classList.remove('connected');
+
+        document.getElementById('callAvatar').textContent = initial;
+        document.getElementById('callPeerName').textContent = peerName || 'Contacto';
+        document.getElementById('callStatusText').textContent = statusText || 'Conectando...';
+
+        // Info bar superior
+        document.getElementById('callInfoAvatar').textContent = initial;
+        document.getElementById('callHeader').textContent = peerName || 'Videollamada';
+        document.getElementById('callDuration').textContent = statusText || 'Conectando...';
+
+        // Mostrar modal
+        document.getElementById('videoCallModal').classList.add('show');
+
+        // Escuchar cuando se conecte el video remoto
+        const remoteVideo = document.getElementById('remoteVideo');
+        remoteVideo.onplaying = () => {
+            // Ocultar overlay y empezar cronómetro
+            if (overlay) overlay.classList.add('connected');
+            this.startCallTimer();
+        };
+    },
+
+    startCallTimer() {
+        if (AppState.callDurationInterval) return; // ya corriendo
         AppState.callStartTime = Date.now();
 
         AppState.callDurationInterval = setInterval(() => {
