@@ -1680,6 +1680,9 @@ const VideoCallManager = {
             this.callPeer = AppState.activeChat;
             this.pendingCandidates = []; // Llamada nueva, limpiar candidatos viejos
 
+            // Desbloquear remoteVideo para reproducción con audio (durante gesto de usuario)
+            this.unlockRemoteAudio();
+
             // Obtener credenciales TURN
             const iceConfig = await this.getIceServers();
             this.setupPeerConnection(iceConfig);
@@ -1734,6 +1737,9 @@ const VideoCallManager = {
 
             this.callPeer = data.from;
             // NO limpiar pendingCandidates aquí — pueden tener ICE candidates del llamante
+
+            // Desbloquear remoteVideo para reproducción con audio (durante gesto de usuario)
+            this.unlockRemoteAudio();
 
             // Obtener credenciales TURN
             const iceConfig = await this.getIceServers();
@@ -1824,20 +1830,34 @@ const VideoCallManager = {
 
         // Recibir tracks remotos
         AppState.peerConnection.ontrack = (event) => {
-            console.log('[WebRTC] ontrack fired, streams:', event.streams.length);
+            console.log('[WebRTC] ontrack fired, streams:', event.streams.length, 'track kind:', event.track?.kind);
             const remoteVideo = document.getElementById('remoteVideo');
             if (remoteVideo && event.streams[0]) {
                 remoteVideo.srcObject = event.streams[0];
-                // Forzar play explícito (necesario en móviles)
+                // play() ya fue desbloqueado con unlockRemoteAudio() durante el gesto de usuario
                 remoteVideo.play().then(() => {
-                    console.log('[WebRTC] Remote video playing');
+                    console.log('[WebRTC] Remote video+audio playing (unmuted)');
                     this.onRemoteVideoConnected();
                 }).catch(err => {
-                    console.warn('[WebRTC] Remote video play() error:', err);
-                    // Intentar sin audio si autoplay falla
+                    console.warn('[WebRTC] Remote video play() error:', err.name, err.message);
+                    // Solo mutear temporalmente como último recurso, y desmutear al tocar
                     remoteVideo.muted = true;
-                    remoteVideo.play().then(() => this.onRemoteVideoConnected()).catch(e => console.error(e));
+                    remoteVideo.play().then(() => {
+                        console.log('[WebRTC] Remote video playing MUTED — esperando interacción para desmutear');
+                        this.onRemoteVideoConnected();
+                        // Auto-desmutear cuando el usuario toque la pantalla
+                        this.setupAutoUnmute();
+                    }).catch(e => console.error('[WebRTC] Fatal play error:', e));
                 });
+            } else if (event.track) {
+                // Fallback: si no hay streams, crear uno
+                console.log('[WebRTC] No streams en ontrack, usando track directamente:', event.track.kind);
+                if (!remoteVideo.srcObject) {
+                    const stream = new MediaStream();
+                    remoteVideo.srcObject = stream;
+                }
+                remoteVideo.srcObject.addTrack(event.track);
+                remoteVideo.play().catch(() => {});
             }
         };
 
@@ -1984,6 +2004,7 @@ const VideoCallManager = {
 
         this.callPeer = null;
         this.pendingCandidates = [];
+        this._autoUnmuteSet = false;
         AppState.incomingCallData = null;
         AppState.audioEnabled = true;
         AppState.videoEnabled = true;
@@ -1997,6 +2018,45 @@ const VideoCallManager = {
         // Reset overlay
         const overlay = document.getElementById('callConnectingOverlay');
         if (overlay) overlay.classList.remove('connected');
+    },
+
+    // Desbloquear el elemento remoteVideo para que pueda reproducir audio
+    // DEBE llamarse durante un gesto de usuario (click en llamar/aceptar)
+    unlockRemoteAudio() {
+        const remoteVideo = document.getElementById('remoteVideo');
+        if (remoteVideo) {
+            remoteVideo.muted = false;
+            // Crear un stream vacío temporal para "desbloquear" el elemento
+            const silentCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const silentDest = silentCtx.createMediaStreamDestination();
+            remoteVideo.srcObject = silentDest.stream;
+            remoteVideo.play().then(() => {
+                console.log('[AUDIO] remoteVideo desbloqueado para audio con gesto de usuario');
+                remoteVideo.srcObject = null; // limpiar, se asignará el stream real en ontrack
+                silentCtx.close();
+            }).catch(err => {
+                console.warn('[AUDIO] No se pudo desbloquear remoteVideo:', err.message);
+                silentCtx.close();
+            });
+        }
+    },
+
+    // Si el browser forzó muted, desmutear al primer toque/click
+    setupAutoUnmute() {
+        if (this._autoUnmuteSet) return;
+        this._autoUnmuteSet = true;
+        const handler = () => {
+            const remoteVideo = document.getElementById('remoteVideo');
+            if (remoteVideo && remoteVideo.muted) {
+                remoteVideo.muted = false;
+                console.log('[AUDIO] remoteVideo desmuteado por interacción de usuario');
+            }
+            this._autoUnmuteSet = false;
+            document.getElementById('videoCallModal').removeEventListener('click', handler);
+            document.getElementById('videoCallModal').removeEventListener('touchstart', handler);
+        };
+        document.getElementById('videoCallModal').addEventListener('click', handler);
+        document.getElementById('videoCallModal').addEventListener('touchstart', handler);
     },
 
     // Llamado cuando el video remoto se conecta (desde múltiples triggers)
