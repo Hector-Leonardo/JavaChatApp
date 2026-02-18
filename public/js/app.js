@@ -9,6 +9,8 @@ const CONFIG = {
         { urls: 'turn:global.relay.metered.ca:443', username: 'f52e1a9b48820bf66de8e724', credential: 'YUC5D8C0K2lo/Z4G' },
         { urls: 'turns:global.relay.metered.ca:443?transport=tcp', username: 'f52e1a9b48820bf66de8e724', credential: 'YUC5D8C0K2lo/Z4G' }
     ] },
+    METERED_API_KEY: 'f52e1a9b48820bf66de8e724',
+    METERED_DOMAIN: 'chihuchat.metered.live',
     CLOUDINARY: {
         CLOUD_NAME: 'dtkwn8jao',
         UPLOAD_PRESET: 'chat_uploads',
@@ -1645,34 +1647,61 @@ const VideoCallManager = {
     // ICE candidates recibidos antes de tener peerConnection
     pendingCandidates: [],
 
+    // ========== Obtener credenciales TURN dinámicas ==========
+    async getIceServers() {
+        try {
+            const url = `https://${CONFIG.METERED_DOMAIN}/api/v1/turn/credentials?apiKey=${CONFIG.METERED_API_KEY}`;
+            const response = await fetch(url);
+            if (response.ok) {
+                const iceServers = await response.json();
+                console.log('[WebRTC] Credenciales TURN dinámicas obtenidas:', iceServers.length, 'servidores');
+                return { iceServers };
+            }
+            console.warn('[WebRTC] API Metered respondió con status:', response.status);
+        } catch (err) {
+            console.warn('[WebRTC] No se pudieron obtener credenciales TURN dinámicas:', err.message);
+        }
+        console.log('[WebRTC] Usando credenciales TURN estáticas');
+        return CONFIG.ICE_SERVERS;
+    },
+
     // ========== PASO 1: Quien llama inicia la solicitud ==========
     async initiateCall() {
         if (!AppState.activeChat || AppState.activeChatType === 'group') return;
 
         try {
-            // Obtener media local ANTES de enviar la solicitud
+            console.log('[CALL] Iniciando llamada a', AppState.activeChat);
+
+            // Obtener media local
             AppState.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
             document.getElementById('localVideo').srcObject = AppState.localStream;
+            console.log('[CALL] Media local obtenida');
 
             this.callPeer = AppState.activeChat;
-            this.setupPeerConnection();
+            this.pendingCandidates = []; // Llamada nueva, limpiar candidatos viejos
+
+            // Obtener credenciales TURN
+            const iceConfig = await this.getIceServers();
+            this.setupPeerConnection(iceConfig);
 
             // Crear offer
             const offer = await AppState.peerConnection.createOffer();
             await AppState.peerConnection.setLocalDescription(offer);
+            console.log('[CALL] Offer creado, SDP length:', offer.sdp.length);
 
-            // Enviar solicitud con el offer incluido
+            // Enviar solicitud con el offer (serializado explícitamente)
             WebSocketManager.send({
                 type: 'callRequest',
                 from: AppState.currentUser,
                 to: AppState.activeChat,
-                offer: offer
+                offer: { type: offer.type, sdp: offer.sdp }
             });
+            console.log('[CALL] callRequest enviado a', AppState.activeChat);
 
-            // Mostrar modal del lado del que llama
+            // Mostrar modal
             this.showVideoModal(AppState.activeChat, 'Llamando...');
         } catch (error) {
-            console.error('Error al iniciar llamada:', error);
+            console.error('[CALL] Error al iniciar llamada:', error);
             alert('No se pudo acceder a la cámara/micrófono.');
             this.cleanup();
         }
@@ -1680,6 +1709,7 @@ const VideoCallManager = {
 
     // ========== PASO 2: Quien recibe ve la notificación ==========
     handleCallRequest(data) {
+        console.log('[CALL] callRequest recibido de', data.from, '- offer presente:', !!data.offer);
         AppState.incomingCallData = data;
         this.callPeer = data.from;
         const initial = data.from ? data.from.charAt(0).toUpperCase() : '?';
@@ -1695,33 +1725,45 @@ const VideoCallManager = {
         if (!data) return;
 
         try {
+            console.log('[CALL] Aceptando llamada de', data.from);
+
             // Obtener media local
             AppState.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
             document.getElementById('localVideo').srcObject = AppState.localStream;
+            console.log('[CALL] Media local obtenida (receptor)');
 
             this.callPeer = data.from;
-            this.setupPeerConnection();
+            // NO limpiar pendingCandidates aquí — pueden tener ICE candidates del llamante
+
+            // Obtener credenciales TURN
+            const iceConfig = await this.getIceServers();
+            this.setupPeerConnection(iceConfig);
 
             // Establecer el offer remoto
+            console.log('[CALL] Estableciendo remote description (offer), type:', data.offer?.type);
             await AppState.peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+            console.log('[CALL] Remote description establecida');
 
             // Aplicar ICE candidates pendientes
+            console.log('[CALL] Flushing', this.pendingCandidates.length, 'ICE candidates pendientes');
             this.flushPendingCandidates();
 
             // Crear answer
             const answer = await AppState.peerConnection.createAnswer();
             await AppState.peerConnection.setLocalDescription(answer);
+            console.log('[CALL] Answer creado, SDP length:', answer.sdp.length);
 
-            // Enviar answer de vuelta
+            // Enviar answer (serializado explícitamente)
             WebSocketManager.send({
                 type: 'callAnswer',
                 to: data.from,
-                answer: answer
+                answer: { type: answer.type, sdp: answer.sdp }
             });
+            console.log('[CALL] callAnswer enviado a', data.from);
 
             this.showVideoModal(data.from, 'Conectando...');
         } catch (error) {
-            console.error('Error al aceptar llamada:', error);
+            console.error('[CALL] Error al aceptar llamada:', error);
             alert('No se pudo acceder a la cámara/micrófono.');
             this.cleanup();
         }
@@ -1730,16 +1772,22 @@ const VideoCallManager = {
     // ========== PASO 4: Quien llamó recibe el answer ==========
     async handleCallAnswer(data) {
         try {
-            if (!AppState.peerConnection) return;
+            if (!AppState.peerConnection) {
+                console.warn('[CALL] handleCallAnswer: No hay peerConnection!');
+                return;
+            }
+            console.log('[CALL] callAnswer recibido, answer type:', data.answer?.type);
             await AppState.peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+            console.log('[CALL] Remote description (answer) establecida');
 
             // Aplicar ICE candidates pendientes
+            console.log('[CALL] Flushing', this.pendingCandidates.length, 'ICE candidates pendientes (caller)');
             this.flushPendingCandidates();
 
             document.getElementById('callStatusText').textContent = 'Conectado';
             document.getElementById('callDuration').textContent = 'Conectado';
         } catch (error) {
-            console.error('Error al recibir answer:', error);
+            console.error('[CALL] Error al recibir answer:', error);
         }
     },
 
@@ -1757,13 +1805,15 @@ const VideoCallManager = {
     },
 
     // ========== Configurar PeerConnection ==========
-    setupPeerConnection() {
+    setupPeerConnection(iceConfig) {
         if (AppState.peerConnection) {
             AppState.peerConnection.close();
         }
-        this.pendingCandidates = [];
+        // NO limpiar pendingCandidates aquí: pueden tener ICE del otro peer
 
-        AppState.peerConnection = new RTCPeerConnection(CONFIG.ICE_SERVERS);
+        const config = iceConfig || CONFIG.ICE_SERVERS;
+        console.log('[WebRTC] Creando PeerConnection con', config.iceServers?.length, 'servidores ICE');
+        AppState.peerConnection = new RTCPeerConnection(config);
 
         // Agregar tracks locales
         if (AppState.localStream) {
@@ -1791,14 +1841,22 @@ const VideoCallManager = {
             }
         };
 
-        // Enviar ICE candidates al peer
+        // Enviar ICE candidates al peer (serializado explícitamente)
         AppState.peerConnection.onicecandidate = (event) => {
             if (event.candidate && this.callPeer) {
+                console.log('[WebRTC] ICE candidate generado, enviando a', this.callPeer);
                 WebSocketManager.send({
                     type: 'iceCandidate',
                     to: this.callPeer,
-                    candidate: event.candidate
+                    candidate: {
+                        candidate: event.candidate.candidate,
+                        sdpMid: event.candidate.sdpMid,
+                        sdpMLineIndex: event.candidate.sdpMLineIndex,
+                        usernameFragment: event.candidate.usernameFragment
+                    }
                 });
+            } else if (!event.candidate) {
+                console.log('[WebRTC] ICE gathering completado');
             }
         };
 
@@ -1822,15 +1880,25 @@ const VideoCallManager = {
             console.log('[WebRTC] ICE state:', iceState);
             if (iceState === 'connected' || iceState === 'completed') {
                 this.onRemoteVideoConnected();
+            } else if (iceState === 'failed') {
+                console.error('[WebRTC] ICE connection FAILED - posible problema con TURN/NAT');
+                document.getElementById('callStatusText').textContent = 'Error de conexión';
             }
+        };
+
+        AppState.peerConnection.onicegatheringstatechange = () => {
+            console.log('[WebRTC] ICE gathering state:', AppState.peerConnection?.iceGatheringState);
+        };
+
+        AppState.peerConnection.onsignalingstatechange = () => {
+            console.log('[WebRTC] Signaling state:', AppState.peerConnection?.signalingState);
         };
     },
 
     // ========== handleCallOffer (legacy, por si el server reenvía como callOffer) ==========
     async handleCallOffer(data) {
-        // Si llega un offer separado (no dentro de callRequest), manejarlo
+        console.log('[CALL] callOffer recibido de', data.from);
         if (!AppState.peerConnection) {
-            // Tratar como callRequest
             this.handleCallRequest(data);
             return;
         }
@@ -1842,30 +1910,35 @@ const VideoCallManager = {
             WebSocketManager.send({
                 type: 'callAnswer',
                 to: data.from,
-                answer: answer
+                answer: { type: answer.type, sdp: answer.sdp }
             });
         } catch (error) {
-            console.error('Error handling call offer:', error);
+            console.error('[CALL] Error handling call offer:', error);
         }
     },
 
     // ========== ICE Candidates ==========
     handleIceCandidate(data) {
+        console.log('[WebRTC] ICE candidate recibido de', data.from || 'peer', '- PC:', !!AppState.peerConnection, '- RD:', !!AppState.peerConnection?.remoteDescription);
         if (AppState.peerConnection && AppState.peerConnection.remoteDescription) {
-            AppState.peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate)).catch(err => {
-                console.error('Error adding ICE candidate:', err);
+            AppState.peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate)).then(() => {
+                console.log('[WebRTC] ICE candidate añadido correctamente');
+            }).catch(err => {
+                console.error('[WebRTC] Error adding ICE candidate:', err);
             });
         } else {
-            // Guardar para aplicar después de setRemoteDescription
+            console.log('[WebRTC] ICE candidate encolado (esperando remoteDescription)');
             this.pendingCandidates.push(data.candidate);
         }
     },
 
     flushPendingCandidates() {
         if (!AppState.peerConnection) return;
+        const count = this.pendingCandidates.length;
+        console.log('[WebRTC] Aplicando', count, 'ICE candidates pendientes');
         this.pendingCandidates.forEach(candidate => {
             AppState.peerConnection.addIceCandidate(new RTCIceCandidate(candidate)).catch(err => {
-                console.error('Error adding queued ICE candidate:', err);
+                console.error('[WebRTC] Error adding queued ICE candidate:', err);
             });
         });
         this.pendingCandidates = [];
