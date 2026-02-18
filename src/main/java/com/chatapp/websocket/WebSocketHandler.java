@@ -5,6 +5,9 @@ import com.chatapp.models.Group;
 import com.chatapp.models.Message;
 import com.chatapp.models.User;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
@@ -1236,22 +1239,24 @@ public class WebSocketHandler {
     // ==================== WEBRTC HANDLERS ====================
 
     /**
-     * Maneja solicitud de llamada
+     * Maneja solicitud de llamada (incluye offer SDP)
      */
     private void handleCallRequest(String message) {
         if (username == null)
             return;
 
-        String to = extractJsonValue(message, "to");
-        String from = extractJsonValue(message, "from");
+        try {
+            JsonObject json = JsonParser.parseString(message).getAsJsonObject();
+            String to = json.has("to") ? json.get("to").getAsString() : "";
 
-        WebSocketHandler recipient = onlineUsers.get(to);
-        if (recipient != null) {
-            String callMsg = String.format(
-                    "{\"type\":\"callRequest\",\"from\":\"%s\",\"to\":\"%s\"}",
-                    from, to);
-            recipient.sendMessage(callMsg);
-            System.out.println("[CALL] Llamada de " + from + " a " + to);
+            WebSocketHandler recipient = onlineUsers.get(to);
+            if (recipient != null) {
+                json.addProperty("from", username);
+                recipient.sendMessage(json.toString());
+                System.out.println("[CALL] Llamada de " + username + " a " + to);
+            }
+        } catch (Exception e) {
+            System.err.println("Error handleCallRequest: " + e.getMessage());
         }
     }
 
@@ -1262,15 +1267,17 @@ public class WebSocketHandler {
         if (username == null)
             return;
 
-        String to = extractJsonValue(message, "to");
-        String offer = extractJsonValue(message, "offer");
+        try {
+            JsonObject json = JsonParser.parseString(message).getAsJsonObject();
+            String to = json.has("to") ? json.get("to").getAsString() : "";
 
-        WebSocketHandler recipient = onlineUsers.get(to);
-        if (recipient != null) {
-            String offerMsg = String.format(
-                    "{\"type\":\"callOffer\",\"from\":\"%s\",\"offer\":%s}",
-                    username, offer);
-            recipient.sendMessage(offerMsg);
+            WebSocketHandler recipient = onlineUsers.get(to);
+            if (recipient != null) {
+                json.addProperty("from", username);
+                recipient.sendMessage(json.toString());
+            }
+        } catch (Exception e) {
+            System.err.println("Error handleCallOffer: " + e.getMessage());
         }
     }
 
@@ -1281,15 +1288,17 @@ public class WebSocketHandler {
         if (username == null)
             return;
 
-        String to = extractJsonValue(message, "to");
-        String answer = extractJsonValue(message, "answer");
+        try {
+            JsonObject json = JsonParser.parseString(message).getAsJsonObject();
+            String to = json.has("to") ? json.get("to").getAsString() : "";
 
-        WebSocketHandler recipient = onlineUsers.get(to);
-        if (recipient != null) {
-            String answerMsg = String.format(
-                    "{\"type\":\"callAnswer\",\"from\":\"%s\",\"answer\":%s}",
-                    username, answer);
-            recipient.sendMessage(answerMsg);
+            WebSocketHandler recipient = onlineUsers.get(to);
+            if (recipient != null) {
+                json.addProperty("from", username);
+                recipient.sendMessage(json.toString());
+            }
+        } catch (Exception e) {
+            System.err.println("Error handleCallAnswer: " + e.getMessage());
         }
     }
 
@@ -1300,15 +1309,17 @@ public class WebSocketHandler {
         if (username == null)
             return;
 
-        String to = extractJsonValue(message, "to");
-        String candidate = extractJsonValue(message, "candidate");
+        try {
+            JsonObject json = JsonParser.parseString(message).getAsJsonObject();
+            String to = json.has("to") ? json.get("to").getAsString() : "";
 
-        WebSocketHandler recipient = onlineUsers.get(to);
-        if (recipient != null) {
-            String candidateMsg = String.format(
-                    "{\"type\":\"iceCandidate\",\"from\":\"%s\",\"candidate\":%s}",
-                    username, candidate);
-            recipient.sendMessage(candidateMsg);
+            WebSocketHandler recipient = onlineUsers.get(to);
+            if (recipient != null) {
+                json.addProperty("from", username);
+                recipient.sendMessage(json.toString());
+            }
+        } catch (Exception e) {
+            System.err.println("Error handleIceCandidate: " + e.getMessage());
         }
     }
 
