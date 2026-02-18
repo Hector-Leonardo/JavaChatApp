@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp-Style Chat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: #ECE5DD;
+            min-height: 100vh;
+            height: auto;
+            overflow: auto;
+            width: 100%;
+        }
+
+        /* Login/Register Screen */
+        #authScreen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #128C7E 0%, #075E54 100%);
+        }
+
+        .auth-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            width: 400px;
+            text-align: center;
+        }
+
+        .auth-container h1 {
+            color: #128C7E;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+
+        .auth-container p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .auth-tab.active {
+            color: #128C7E;
+            border-bottom-color: #128C7E;
+            font-weight: bold;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .auth-form input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .auth-form input:focus {
+            outline: none;
+            border-color: #128C7E;
+        }
+
+        .auth-form button {
+            width: 100%;
+            padding: 15px;
+            background: #128C7E;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .auth-form button:hover {
+            background: #0d7a6d;
+        }
+
+        .error-message {
+            color: #dc3545;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        /* Main App Screen */
+        #appScreen {
+            display: none;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            max-width: none;
+            margin: 0;
+            background: white;
+            box-shadow: none;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 35%;
+            max-width: 400px;
+            border-right: 1px solid #dadada;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .sidebar-header {
+            background: #075E54;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #064940;
+        }
+
+        .sidebar-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .profile-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .profile-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .profile-avatar-edit {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            font-size: 0.6rem;
+            padding: 2px 0;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .profile-avatar:hover .profile-avatar-edit {
+            opacity: 1;
+        }
+
+        .sidebar-header h2 {
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
+
+        .add-contact-btn {
+            background: #25D366;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .add-contact-btn:hover {
+            background: #128C7E;
+            transform: scale(1.05);
+        }
+
+        /* Botón de solicitudes */
+        .requests-btn {
+            background: transparent;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: background 0.3s;
+        }
+
+        .requests-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .requests-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: #dc3545;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: bold;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+
+        /* Toast Notifications */
+        .toast-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 9999;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+        }
+
+        .toast-notification.show {
+            transform: translateX(0);
+        }
+
+        .toast-notification strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #25D366;
+        }
+
+        .toast-notification p {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        /* Edit Profile Modal */
+        .edit-profile-avatar-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .edit-profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #128C7E, #25D366);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+            font-weight: bold;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .edit-profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .edit-profile-avatar-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .edit-profile-avatar:hover .edit-profile-avatar-overlay {
+            opacity: 1;
+        }
+
+        .edit-profile-avatar-overlay span {
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        .edit-profile-form label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .edit-profile-form input,
+        .edit-profile-form textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+
+        .edit-profile-form input:focus,
+        .edit-profile-form textarea:focus {
+            outline: none;
+            border-color: #25D366;
+        }
+
+        .edit-profile-form textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .edit-profile-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .edit-profile-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .edit-profile-actions .cancel-btn {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .edit-profile-actions .cancel-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .edit-profile-actions .save-btn {
+            background: #25D366;
+            color: white;
+        }
+
+        .edit-profile-actions .save-btn:hover {
+            background: #128C7E;
+        }
+
+        /* Request Items */
+        .request-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            gap: 12px;
+        }
+
+        .request-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #128C7E, #25D366);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.3rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .request-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .request-info {
+            flex: 1;
+        }
+
+        .request-info h4 {
+            margin: 0 0 4px 0;
+            color: #333;
+        }
+
+        .request-info p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .request-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .accept-btn {
+            background: #25D366;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+            transition: background 0.3s;
+        }
+
+        .accept-btn:hover {
+            background: #128C7E;
+        }
+
+        .reject-btn {
+            background: #f0f0f0;
+            color: #666;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .reject-btn:hover {
+            background: #dc3545;
+            color: white;
+        }
+
+        /* Tabs de solicitudes */
+        .requests-tabs {
+            display: flex;
+            gap: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 15px;
+            padding: 0 10px;
+        }
+
+        .requests-tab {
+            flex: 1;
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: #666;
+            transition: all 0.3s;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .requests-tab.active {
+            color: #25D366;
+            border-bottom-color: #25D366;
+            font-weight: 600;
+        }
+
+        .requests-tab:hover {
+            background: #f5f5f5;
+        }
+
+        .requests-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        /* Toast Container */
+        #toastContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Modal Agregar Contacto */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 400px;
+            max-width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: #075E54;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .modal-body input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+
+        .modal-body input:focus {
+            outline: none;
+            border-color: #128C7E;
+        }
+
+        .modal-body button {
+            width: 100%;
+            padding: 12px;
+            background: #128C7E;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .modal-body button:hover {
+            background: #0d7a6d;
+        }
+
+        .modal-body button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .search-result {
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .search-result.active {
+            display: block;
+        }
+
+        .search-result.error {
+            background: #ffe6e6;
+            color: #dc3545;
+        }
+
+        .search-result.success {
+            background: #e6ffed;
+        }
+
+        .search-result-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .search-result-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #128C7E, #25D366);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .search-result-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .search-result-info {
+            flex: 1;
+        }
+
+        .search-result-info h4 {
+            margin: 0 0 4px 0;
+            color: #333;
+        }
+
+        .search-result-info p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .search-box {
+            background: #F6F6F6;
+            padding: 10px;
+            border-bottom: 1px solid #dadada;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 20px;
+            background: white;
+            font-size: 0.9rem;
+        }
+
+        .contact-list {
+            flex: 1;
+            overflow-y: auto;
+            background: white;
+        }
+
+        .contact-item {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .contact-item:hover {
+            background: #f5f5f5;
+        }
+
+        .contact-item.active {
+            background: #EBEBEB;
+        }
+
+        .contact-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #128C7E, #25D366);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-right: 15px;
+            position: relative;
+        }
+
+        .online-indicator {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #25D366;
+            border: 2px solid white;
+        }
+
+        .contact-info {
+            flex: 1;
+        }
+
+        .contact-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .contact-status {
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        /* Chat Area */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #E5DDD5;
+        }
+
+        .chat-header {
+            background: #075E54;
+            padding: 15px 20px;
+            border-bottom: 1px solid #064940;
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-header-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-right: 15px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .chat-header-info h3 {
+            color: white;
+            font-size: 1.1rem;
+            margin-bottom: 2px;
+        }
+
+        .chat-header-info p {
+            color: #d1f0e8;
+            font-size: 0.8rem;
+        }
+
+        .no-chat-selected {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #666;
+        }
+
+        .no-chat-selected h2 {
+            margin-bottom: 10px;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZGVmcz4KICAgIDxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB4PSIwIiB5PSIwIiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPgogICAgICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIGZpbGw9IiNFNURERDUiLz4KICAgICAgPGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iMSIgZmlsbD0iI0QzQ0JDNCIvPgogICAgPC9wYXR0ZXJuPgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI3BhdHRlcm4pIi8+Cjwvc3ZnPg==');
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 15px;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.sent {
+            justify-content: flex-end;
+        }
+
+        .message-bubble {
+            max-width: 60%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            word-wrap: break-word;
+        }
+
+        .message.received .message-bubble {
+            background: white;
+            border-bottom-left-radius: 0;
+        }
+
+        .message.sent .message-bubble {
+            background: #DCF8C6;
+            border-bottom-right-radius: 0;
+        }
+
+        .message-content {
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .message-image {
+            max-width: 300px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: block;
+            margin-bottom: 4px;
+            transition: opacity 0.2s;
+        }
+
+        .message-image:hover {
+            opacity: 0.9;
+        }
+
+        .message-video {
+            max-width: 300px;
+            max-height: 200px;
+            border-radius: 8px;
+            display: block;
+            margin-bottom: 4px;
+            background: #000;
+        }
+
+        /* Upload Spinner */
+        .upload-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #128C7E;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .message-time {
+            font-size: 0.7rem;
+            color: #999;
+            text-align: right;
+        }
+
+        /* Input Area */
+        .input-area {
+            background: #F0F0F0;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #54656f;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background 0.2s, color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .input-btn:hover {
+            background: #e9edef;
+            color: #128C7E;
+        }
+
+        /* Botones en el header verde */
+        .chat-header .input-btn {
+            color: white;
+        }
+
+        .chat-header .input-btn:hover {
+            background: rgba(255,255,255,0.2);
+            color: #25D366;
+        }
+
+        .chat-header-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .delete-contact-btn {
+            color: white !important;
+        }
+
+        .delete-contact-btn:hover {
+            background: rgba(220, 53, 69, 0.8) !important;
+            color: white !important;
+        }
+
+        .input-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        /* WhatsApp Logo */
+        .whatsapp-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+        }
+
+        .whatsapp-logo svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 25px;
+            font-size: 0.95rem;
+            background: white;
+        }
+
+        #messageInput:focus {
+            outline: none;
+        }
+
+        #sendBtn {
+            background: #128C7E;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+        }
+
+        #sendBtn svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        #sendBtn:hover {
+            background: #0d7a6d;
+        }
+
+        /* Emoji Picker */
+        .emoji-picker {
+            display: none;
+            position: absolute;
+            bottom: 70px;
+            left: 20px;
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+            max-width: 300px;
+            z-index: 1000;
+        }
+
+        .emoji-picker.show {
+            display: block;
+        }
+
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .emoji-item {
+            font-size: 1.5rem;
+            padding: 5px;
+            cursor: pointer;
+            text-align: center;
+            border-radius: 5px;
+            transition: background 0.2s;
+        }
+
+        .emoji-item:hover {
+            background: #f0f0f0;
+        }
+
+        /* Image Modal */
+        .image-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-modal.show {
+            display: flex;
+        }
+
+        .image-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+        }
+
+        .image-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 3rem;
+            color: white;
+            cursor: pointer;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Video Call Modal */
+        .video-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .video-modal[hidden] {
+            display: none !important;
+        }
+
+        .video-modal.show {
+            display: flex;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            gap: 0;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .video-wrapper {
+            position: relative;
+            width: 50%;
+            height: 100%;
+            background: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .video-wrapper.remote {
+            border-right: 1px solid #333;
+        }
+
+        .video-stream {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #remoteVideo, #localVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #000;
+        }
+
+        .video-label {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 20px;
+            z-index: 15;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .video-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #25D366;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .video-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 25;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px 25px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .control-btn.active {
+            background: #25D366;
+        }
+
+        .control-btn.muted {
+            background: #ff4444;
+        }
+
+        .call-buttons {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+            z-index: 25;
+        }
+
+        .call-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            color: white;
+        }
+
+        .call-btn-accept {
+            background: #25D366;
+        }
+
+        .call-btn-accept:hover {
+            background: #1fa855;
+        }
+
+        .call-btn-reject {
+            background: #dc3545;
+        }
+
+        .call-btn-reject:hover {
+            background: #c82333;
+        }
+
+        .call-btn-end {
+            background: #ff4444;
+            padding: 15px 40px;
+        }
+
+        .call-btn-end:hover {
+            background: #dd0000;
+        }
+
+        .call-info {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            color: white;
+            z-index: 20;
+        }
+
+        .call-info h3 {
+            font-size: 1.3rem;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .call-duration {
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        .call-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            z-index: 3001;
+            text-align: center;
+            display: none;
+        }
+
+        .call-notification.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        .call-notification h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        .call-notification-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .call-notification-buttons button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                max-width: none;
+            }
+            
+            .sidebar.chat-open {
+                display: none;
+            }
+            
+            .chat-area.chat-open {
+                display: flex;
+            }
+
+            .video-wrapper {
+                width: 100%;
+                height: 50%;
+            }
+
+            .video-wrapper.remote {
+                height: 50%;
+                border-right: none;
+                border-bottom: 1px solid #333;
+            }
+
+            .video-controls {
+                bottom: 60px;
+                padding: 12px 20px;
+                gap: 10px;
+            }
+
+            .control-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 1.1rem;
+            }
+
+            .call-buttons {
+                right: 20px;
+                bottom: 100px;
+            }
+
+            .call-btn {
+                padding: 12px 25px;
+                font-size: 0.9rem;
+            }
+
+            .call-info {
+                top: 20px;
+                left: 20px;
+            }
+
+            .call-info h3 {
+                font-size: 1.1rem;
+            }
+
+            .video-label {
+                font-size: 0.85rem;
+                padding: 8px 12px;
+            }
+        }
+
+        /* Additional mobile layout adjustments */
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+                height: 100vh;
+            }
+
+            /* Hide chat area until a conversation is opened */
+            .chat-area {
+                display: none;
+                height: calc(100vh - 60px);
+            }
+
+            .chat-area.chat-open {
+                display: flex;
+            }
+
+            .sidebar.hidden {
+                display: none !important;
+            }
+
+            .mobile-back-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 12px;
+                margin: 10px;
+                background: #128C7E;
+                color: white;
+                border-radius: 8px;
+                border: none;
+                cursor: pointer;
+                font-weight: bold;
+            }
+
+            .mobile-back-btn.hidden {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Auth Screen -->
+    <div id="authScreen">
+        <div class="auth-container">
+            <div class="whatsapp-logo">
+                <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="#128C7E" d="M24 4C12.95 4 4 12.95 4 24c0 3.55.93 6.88 2.54 9.78L4 44l10.52-2.47A19.87 19.87 0 0024 44c11.05 0 20-8.95 20-20S35.05 4 24 4zm0 36c-3.18 0-6.17-.77-8.82-2.12l-.63-.33-6.24 1.47 1.54-5.98-.4-.62A15.86 15.86 0 018 24c0-8.84 7.16-16 16-16s16 7.16 16 16-7.16 16-16 16z"/>
+                    <path fill="#128C7E" d="M34.5 28.58c-.57-.29-3.37-1.66-3.89-1.85-.52-.19-.9-.29-1.28.29-.38.57-1.47 1.85-1.8 2.23-.33.38-.67.43-1.24.14-.57-.29-2.4-.88-4.58-2.82-1.69-1.51-2.84-3.37-3.17-3.94-.33-.57-.04-.88.25-1.17.26-.26.57-.67.86-1 .29-.34.38-.57.57-.95.19-.38.1-.71-.05-1-.14-.29-1.28-3.08-1.76-4.22-.46-1.11-.93-1.03-1.28-1.03-.33 0-.71-.05-1.09-.05s-1 .14-1.52.71c-.52.57-2 1.95-2 4.76s2.05 5.52 2.33 5.9c.29.38 4.03 6.15 9.76 8.63 1.36.59 2.43.94 3.26 1.2 1.37.44 2.62.38 3.6.23 1.1-.16 3.37-1.38 3.85-2.71.48-1.33.48-2.47.33-2.71-.14-.24-.52-.38-1.09-.67z"/>
+                </svg>
+            </div>
+            <h1>Chat App</h1>
+            <p>Conecta con tus amigos</p>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchTab('login')">Iniciar Sesión</button>
+                <button class="auth-tab" onclick="switchTab('register')">Registrarse</button>
+            </div>
+            
+            <div id="loginForm" class="auth-form active">
+                <input type="text" id="loginUsername" placeholder="Nombre de usuario" />
+                <input type="password" id="loginPassword" placeholder="Contraseña" />
+                <button onclick="login()">Entrar</button>
+                <div id="loginError" class="error-message"></div>
+            </div>
+            
+            <div id="registerForm" class="auth-form">
+                <input type="text" id="registerUsername" placeholder="Nombre de usuario" />
+                <input type="password" id="registerPassword" placeholder="Contraseña" />
+                <input type="password" id="registerPasswordConfirm" placeholder="Confirmar contraseña" />
+                <button onclick="register()">Crear Cuenta</button>
+                <div id="registerError" class="error-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Screen -->
+    <div id="appScreen">
+        <div class="app-container">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <div class="sidebar-header-left">
+                        <div class="profile-avatar" id="profileAvatar" onclick="ProfileManager.openEditProfileModal()" title="Editar perfil">
+                            <span id="profileAvatarText">U</span>
+                            <div class="profile-avatar-edit">Editar</div>
+                        </div>
+                        <h2 id="currentUsername">Usuario</h2>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="requests-btn" onclick="ContactManager.openRequestsModal()" title="Solicitudes pendientes">
+                            <svg viewBox="0 0 24 24" width="22" height="22" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+                            <span class="requests-badge" id="requestsBadge">0</span>
+                        </button>
+                        <button class="add-contact-btn" onclick="ContactManager.openAddContactModal()" title="Agregar contacto">
+                            <svg viewBox="0 0 24 24" width="22" height="22" fill="white"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                        </button>
+                        <button class="logout-btn" onclick="logout()">Salir</button>
+                    </div>
+                </div>
+                
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Buscar contactos..." onkeyup="filterContacts()" />
+                </div>
+                
+                <div style="display: flex; border-bottom: 1px solid #dadada; background: #EDEDED;">
+                    <button class="auth-tab" id="contactsTab" style="flex: 1; border-radius: 0;" onclick="switchView('contacts')">Contactos</button>
+                    <button class="auth-tab" id="groupsTab" style="flex: 1; border-radius: 0;" onclick="switchView('groups')">Grupos</button>
+                </div>
+                
+                <div class="contact-list" id="contactList">
+                    <!-- Contacts will be loaded here -->
+                </div>
+                
+                <div class="contact-list hidden" id="groupList">
+                    <div style="padding: 15px; border-bottom: 1px solid #dadada;">
+                        <button onclick="showCreateGroupModal()" style="width: 100%; padding: 12px; background: #128C7E; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">+ Crear Grupo</button>
+                    </div>
+                    <!-- Groups will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Chat Area -->
+            <div class="chat-area" id="chatArea">
+                <!-- Botón móvil para volver a la lista de contactos -->
+                <button id="mobileBackBtn" class="mobile-back-btn hidden" onclick="toggleMobileSidebar(false)">← Volver</button>
+                <div class="no-chat-selected">
+                    <h2>Bienvenido al Chat</h2>
+                    <p>Selecciona un contacto para comenzar a chatear</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emoji Picker -->
+    <div class="emoji-picker" id="emojiPicker">
+        <div class="emoji-grid" id="emojiGrid"></div>
+    </div>
+
+    <!-- Image Modal -->
+    <div class="image-modal" id="imageModal" onclick="closeImageModal()">
+        <span class="image-modal-close">&times;</span>
+        <img id="modalImage" src="" alt="Image" />
+    </div>
+    
+    <!-- Create Group Modal -->
+    <div class="image-modal" id="createGroupModal" onclick="closeCreateGroupModal()">
+        <div onclick="event.stopPropagation()" style="background: white; padding: 30px; border-radius: 15px; max-width: 500px; width: 90%;">
+            <h2 style="margin-bottom: 20px; color: #333;">Crear Grupo Nuevo</h2>
+            <input type="text" id="groupNameInput" placeholder="Nombre del grupo" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #eee; border-radius: 8px; font-size: 1rem;" />
+            <p style="color: #666; margin-bottom: 10px;">Seleccionar miembros:</p>
+            <div id="memberSelection" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px; border: 1px solid #eee; border-radius: 8px; padding: 10px;">
+                <!-- Members checkboxes will be loaded here -->
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="createGroup()" style="flex: 1; padding: 12px; background: #128C7E; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Crear</button>
+                <button onclick="closeCreateGroupModal()" style="flex: 1; padding: 12px; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Call Modal -->
+    <div class="video-modal" id="videoCallModal" hidden>
+        <div class="video-container" id="videoContainer">
+            <!-- Remote Video (otro usuario) -->
+            <div class="video-wrapper remote">
+                <div class="video-stream">
+                    <video id="remoteVideo" autoplay playsinline></video>
+                    <div class="video-label">
+                        <span class="video-indicator"></span>
+                        <span id="remoteLabel">Contacto</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Local Video (tú) -->
+            <div class="video-wrapper">
+                <div class="video-stream">
+                    <video id="localVideo" autoplay muted playsinline></video>
+                    <div class="video-label">
+                        <span class="video-indicator"></span>
+                        <span id="localLabel">Tú</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Call Info -->
+            <div class="call-info">
+                <h3 id="callHeader">Videollamada</h3>
+                <div class="call-duration" id="callDuration">00:00</div>
+            </div>
+
+            <!-- Controls -->
+            <div class="video-controls">
+                <button class="control-btn active" onclick="toggleAudio()" id="audioBtn" title="Mutar micrófono">🎤</button>
+                <button class="control-btn active" onclick="toggleVideo()" id="videoBtn" title="Pausar video">📹</button>
+            </div>
+
+            <!-- End Call -->
+            <div class="call-buttons">
+                <button class="call-btn call-btn-end" onclick="endCall()">🔴 Terminar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call Notification Modal -->
+    <div class="call-notification" id="callNotification">
+        <h3 id="callNotificationText">Llamada entrante...</h3>
+        <div class="call-notification-buttons">
+            <button class="call-btn call-btn-accept" onclick="acceptCall()">✅ Aceptar</button>
+            <button class="call-btn call-btn-reject" onclick="rejectCall()">❌ Rechazar</button>
+        </div>
+    </div>
+
+    <!-- Mobile toggle script (keeps small mobile behavior separate) -->
+    <script>
+        function toggleMobileSidebar(showChat){
+            const sidebar = document.querySelector('.sidebar');
+            const chatArea = document.getElementById('chatArea');
+            const backBtn = document.getElementById('mobileBackBtn');
+            if(!sidebar || !chatArea || !backBtn) return;
+            if(showChat){
+                sidebar.classList.add('hidden');
+                chatArea.classList.add('chat-open');
+                backBtn.classList.remove('hidden');
+            } else {
+                sidebar.classList.remove('hidden');
+                chatArea.classList.remove('chat-open');
+                backBtn.classList.add('hidden');
+            }
+        }
+
+        // When a contact is clicked on mobile, switch to chat view.
+        document.addEventListener('click', function(e){
+            if(window.innerWidth <= 768 && e.target.closest('.contact-item')){
+                toggleMobileSidebar(true);
+            }
+        });
+
+        // Ensure UI resets on resize to larger screens
+        window.addEventListener('resize', function(){
+            const sidebar = document.querySelector('.sidebar');
+            const chatArea = document.getElementById('chatArea');
+            const backBtn = document.getElementById('mobileBackBtn');
+            if(!sidebar || !chatArea || !backBtn) return;
+            if(window.innerWidth > 768){
+                sidebar.classList.remove('hidden');
+                chatArea.classList.remove('chat-open');
+                backBtn.classList.add('hidden');
+            }
+        });
+    </script>
+
+    <!-- Modal Agregar Contacto -->
+    <div class="modal-overlay" id="addContactModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Agregar Contacto</h3>
+                <button class="modal-close" onclick="ContactManager.closeAddContactModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="searchContactInput" placeholder="Nombre de usuario exacto" onkeypress="if(event.key==='Enter') ContactManager.searchUser()" />
+                <button onclick="ContactManager.searchUser()" id="searchContactBtn">Buscar</button>
+                
+                <div class="search-result" id="searchResult">
+                    <div class="search-result-user" id="searchResultUser">
+                        <div class="search-result-avatar" id="searchResultAvatar">
+                            <span id="searchResultAvatarText">U</span>
+                        </div>
+                        <div class="search-result-info">
+                            <h4 id="searchResultUsername">Usuario</h4>
+                            <p id="searchResultStatus">Desconectado</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="search-result error" id="searchError" style="display: none;">
+                    <span id="searchErrorText">Error</span>
+                </div>
+                
+                <button onclick="ContactManager.addFoundContact()" id="addContactBtn" style="display: none; margin-top: 10px; background: #25D366;">
+                    Enviar Solicitud
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Solicitudes Pendientes -->
+    <div class="modal-overlay" id="requestsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Solicitudes de Amistad</h3>
+                <button class="modal-close" onclick="ContactManager.closeRequestsModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="requests-tabs">
+                    <button class="requests-tab active" id="receivedTab" onclick="ContactManager.showReceivedRequests()">Recibidas</button>
+                    <button class="requests-tab" id="sentTab" onclick="ContactManager.showSentRequests()">Enviadas</button>
+                </div>
+                <div id="pendingRequestsList" class="requests-list">
+                    <p style="text-align: center; color: #666; padding: 20px;">No tienes solicitudes pendientes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Perfil -->
+    <div class="modal-overlay" id="editProfileModal">
+        <div class="modal-content" style="max-width: 350px;">
+            <div class="modal-header">
+                <h3>Editar Foto de Perfil</h3>
+                <button class="modal-close" onclick="ProfileManager.closeEditProfileModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 30px 20px;">
+                <div class="edit-profile-avatar-container">
+                    <div class="edit-profile-avatar" id="editProfileAvatar" onclick="ProfileManager.selectProfilePicture()">
+                        <span id="editProfileAvatarText">U</span>
+                        <div class="edit-profile-avatar-overlay">
+                            <svg viewBox="0 0 24 24" width="30" height="30" fill="white">
+                                <path d="M3 4V1h2v3h3v2H5v3H3V6H0V4h3zm3 6V7h3V4h7l1.83 2H21c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V10h3zm7 9c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-3.2-5c0 1.77 1.43 3.2 3.2 3.2s3.2-1.43 3.2-3.2-1.43-3.2-3.2-3.2-3.2 1.43-3.2 3.2z"/>
+                            </svg>
+                            <span>Cambiar foto</span>
+                        </div>
+                    </div>
+                </div>
+                <p style="color: #666; margin-top: 15px; font-size: 14px;">Haz clic en la imagen para cambiar tu foto de perfil</p>
+                <p style="color: #128C7E; font-weight: 600; margin-top: 10px;" id="editProfileUsername"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toastContainer"></div>
+
+    <!-- External JavaScript -->
+    <script src="js/app.js"></script>
+</body>
+</html>
