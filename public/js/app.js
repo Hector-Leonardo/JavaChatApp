@@ -899,22 +899,49 @@ const UIManager = {
 
 // ==================== MEDIA MANAGER (CLOUDINARY) ====================
 const MediaManager = {
+    _fileInput: null,
+
+    // Limpia input anterior si existe
+    _cleanupInput() {
+        if (this._fileInput && this._fileInput.parentNode) {
+            this._fileInput.parentNode.removeChild(this._fileInput);
+        }
+        this._fileInput = null;
+    },
+
     // Abre el selector de archivos para imagen
     selectImage() {
+        this._cleanupInput();
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'image/*';
-        input.onchange = (e) => this.handleFileSelect(e, 'image');
-        input.click();
+        input.capture = 'environment'; // permite usar cámara en móvil
+        input.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;';
+        input.onchange = (e) => {
+            this.handleFileSelect(e, 'image');
+            this._cleanupInput();
+        };
+        document.body.appendChild(input);
+        this._fileInput = input;
+        // Pequeño delay para iOS Safari
+        setTimeout(() => input.click(), 100);
     },
 
     // Abre el selector de archivos para video
     selectVideo() {
+        this._cleanupInput();
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'video/*';
-        input.onchange = (e) => this.handleFileSelect(e, 'video');
-        input.click();
+        input.capture = 'environment';
+        input.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;';
+        input.onchange = (e) => {
+            this.handleFileSelect(e, 'video');
+            this._cleanupInput();
+        };
+        document.body.appendChild(input);
+        this._fileInput = input;
+        setTimeout(() => input.click(), 100);
     },
 
     // Maneja la selección de archivo
