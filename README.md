@@ -126,8 +126,6 @@ O descarga el ZIP y extráelo en una carpeta.
 6. Descarga el archivo JSON generado
 7. Renómbralo a **`serviceAccountKey.json`** y colócalo en la **raíz del proyecto** (`JavaChatApp/serviceAccountKey.json`)
 
-> ⚠️ **Importante:** Nunca subas `serviceAccountKey.json` a un repositorio público. Contiene credenciales de acceso administrativo a tu proyecto Firebase.
-
 ### 3. Compilar el proyecto
 
 #### Opción A — Script de Windows
